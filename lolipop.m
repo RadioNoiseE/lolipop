@@ -29,6 +29,13 @@ static NSColor *lolipop_color (const char *buffer) {
 }
 
 void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
+  CGFloat (^cubic_bezier) (CGFloat) = ^CGFloat (CGFloat time) {
+    if (time < 0.5)
+      return 4 * time * time * time;
+    time = 2 * time - 2;
+    return 0.5 * time * time * time + 1;
+  };
+
   CGFloat (^clamp) (CGFloat) = ^CGFloat (CGFloat x) {
     return x < 0.0 ? 0.0 : (x > 1.0 ? 1.0 : x);
   };
@@ -38,13 +45,6 @@ void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
         return CGPointMake (from.x + (to.x - from.x) * time,
                             from.y + (to.y - from.y) * time);
       };
-
-  CGFloat (^cubic_bezier) (CGFloat) = ^CGFloat (CGFloat time) {
-    if (time < 0.5)
-      return 4 * time * time * time;
-    time = 2 * time - 2;
-    return 0.5 * time * time * time + 1;
-  };
 
   if (NSEqualPoints (new_pos, lolipop.last_pos))
     return;
