@@ -17,12 +17,18 @@ typedef struct {
 
 static lolipop_state lolipop;
 
-@interface LolipopMaker : NSObject
-+ (void)lolipop_at:(NSPoint)new_pos size:(NSSize)new_size view:(NSView *)view;
-@end
+static NSColor *lolipop_color (const char *buffer) {
+  char         *end;
+  unsigned long color = strtoul (++buffer, &end, 16);
+  CGFloat       model[3];
 
-@implementation LolipopMaker
-+ (void)lolipop_at:(NSPoint)new_pos size:(NSSize)new_size view:(NSView *)view {
+  for (int i = 0; i < 3; i++)
+    model[i] = ((color >> (16 - 8 * i)) & 0xFF) / 255.0;
+
+  return [NSColor colorWithRed:model[0] green:model[1] blue:model[2] alpha:0.6];
+}
+
+void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
   CGFloat (^clamp) (CGFloat) = ^CGFloat (CGFloat x) {
     return x < 0.0 ? 0.0 : (x > 1.0 ? 1.0 : x);
   };
@@ -72,12 +78,10 @@ static lolipop_state lolipop;
 
     if (fabs (dx) < epsilon) {
       if (dy > 0) {
-
         tl_time = slow;
         tr_time = slow;
         br_time = fast;
         bl_time = fast;
-
       } else {
         tl_time = fast;
         tr_time = fast;
@@ -114,7 +118,6 @@ static lolipop_state lolipop;
         tr_time = slow;
         br_time = norm;
         bl_time = fast;
-
       } else {
         tl_time = fast;
         tr_time = norm;
@@ -162,18 +165,6 @@ static lolipop_state lolipop;
 
   [CATransaction commit];
 }
-@end
-
-static NSColor *lolipop_color (const char *buffer) {
-  char         *end;
-  unsigned long color = strtoul (++buffer, &end, 16);
-  CGFloat       model[3];
-
-  for (int i = 0; i < 3; i++)
-    model[i] = ((color >> (16 - 8 * i)) & 0xFF) / 255.0;
-
-  return [NSColor colorWithRed:model[0] green:model[1] blue:model[2] alpha:0.6];
-}
 
 static void lolipop_lick (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
   NSWindow *window   = [NSApp mainWindow];
@@ -191,7 +182,7 @@ static void lolipop_lick (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
   }
 
   if (lolipop.last_bool)
-    [LolipopMaker lolipop_at:new_pos size:new_size view:view];
+    lolipop_at (new_pos, new_size, view);
 
   lolipop.last_pos  = new_pos;
   lolipop.last_size = new_size;
@@ -224,7 +215,8 @@ home:
 }
 
 int emacs_module_init (struct emacs_runtime *runtime) {
-  emacs_env  *env = runtime->get_environment (runtime);
+  emacs_env *env = runtime->get_environment (runtime);
+
   emacs_value function =
       env->make_function (env, 5, 5, lolipop_chew, "Lolipop dissolves.", NULL);
   emacs_value symbol = env->intern (env, "lolipop-chew");
