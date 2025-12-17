@@ -37,7 +37,7 @@ void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
   };
 
   CGFloat (^clamp) (CGFloat) = ^CGFloat (CGFloat x) {
-    return x < 0.0 ? 0.0 : (x > 1.0 ? 1.0 : x);
+    return x < 0 ? 0 : (x > 1 ? 1 : x);
   };
 
   CGPoint (^interpolate) (CGPoint, CGPoint, CGFloat) =
