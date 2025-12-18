@@ -15,10 +15,10 @@
   "Determine whether the animation should be rendered."
   (when (timerp lolipop--timer)
     (cancel-timer lolipop--timer))
-  (unless (or (memq major-mode lolipop-filter-modes)
-              (seq-intersection local-minor-modes lolipop-filter-modes)
-              (memq this-command lolipop-filter-commands)
-              (memq last-command lolipop-filter-commands))
+  (if (or (memq major-mode lolipop-filter-modes)
+          (seq-intersection local-minor-modes lolipop-filter-modes)
+          (memq this-command lolipop-filter-commands))
+      (lolipop-lick nil)
     (setq lolipop--timer
           (run-with-idle-timer 0.02 nil 'lolipop-unwrap))))
 
