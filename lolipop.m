@@ -2,7 +2,7 @@
 #include <QuartzCore/QuartzCore.h>
 #include <emacs-module.h>
 
-#define epsilon 1e-3
+#define epsilon 6
 
 int plugin_is_GPL_compatible;
 

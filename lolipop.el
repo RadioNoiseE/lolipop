@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2025 Jing Huang <rne.kou@icloud.com>
 
-(defun lolipop-crush ()
+(defun lolipop-unwrap ()
   (when-let* ((visible (or (pos-visible-in-window-p)
                            (and (redisplay)
                                 (pos-visible-in-window-p))))
@@ -10,7 +10,7 @@
               (coordinate (posn-x-y cursor))
               (window (posn-window cursor))
               (edges (window-inside-pixel-edges window)))
-    (apply 'lolipop-chew
+    (apply 'lolipop-lick
            (list
             (+ (car coordinate) (nth 0 edges))
             (+ (cdr coordinate) (nth 1 edges))
