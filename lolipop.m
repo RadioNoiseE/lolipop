@@ -59,7 +59,7 @@ void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
   CGFloat dy = new_pos.y - lolipop.last_pos.y;
 
   CGFloat distance = hypot (dx, dy);
-  CGFloat duration = 0.24 * tanh (distance / 100);
+  CGFloat duration = 0.6 * tanh (distance / 400);
 
   int steps = duration * 120;
 
