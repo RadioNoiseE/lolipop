@@ -23,7 +23,7 @@ static NSColor *lolipop_color (const char *buffer) {
   CGFloat       model[3];
 
   for (int i = 0; i < 3; i++)
-    model[i] = ((color >> (16 - 8 * i)) & 0xFF) / 255.0;
+    model[i] = ((color >> (16 - 8 * i)) & 0xFF) / (CGFloat) 255;
 
   return [NSColor colorWithRed:model[0] green:model[1] blue:model[2] alpha:0.6];
 }
