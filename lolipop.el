@@ -5,12 +5,22 @@
 (defvar lolipop--timer nil
   "Timer used to rate-limit cursor animations.")
 
+(defvar lolipop-filter-modes nil
+  "List of major and minor modes that need spacial care.")
+
+(defvar lolipop-filter-commands nil
+  "List of commands that need special care.")
+
 (defun lolipop-savor ()
-  "Cancel exisiting timer and schedule a new one."
+  "Determine whether the animation should be rendered."
   (when (timerp lolipop--timer)
     (cancel-timer lolipop--timer))
-  (setq lolipop--timer
-        (run-with-idle-timer 0.02 nil 'lolipop-unwrap)))
+  (unless (or (memq major-mode lolipop-filter-modes)
+              (seq-intersection local-minor-modes lolipop-filter-modes)
+              (memq this-command lolipop-filter-commands)
+              (memq last-command lolipop-filter-commands))
+    (setq lolipop--timer
+          (run-with-idle-timer 0.02 nil 'lolipop-unwrap))))
 
 (defun lolipop-unwrap ()
   "Calculate current cursor position, size and color, then call
@@ -40,12 +50,12 @@
 ;;;###autoload
 (define-minor-mode lolipop-mode
   "Toggle rendering of cursor animations."
-  :init-value nil
+  :global t
   (if lolipop-mode
       (progn
         (unless (functionp 'lolipop-lick)
           (load "lolipop-core"))
-        (add-hook 'post-command-hook 'lolipop-savor nil t))
-    (remove-hook 'post-command-hook 'lolipop-savor t)))
+        (add-hook 'post-command-hook 'lolipop-savor))
+    (remove-hook 'post-command-hook 'lolipop-savor)))
 
 (provide 'lolipop-mode)
