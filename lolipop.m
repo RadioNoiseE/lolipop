@@ -28,7 +28,7 @@ static NSColor *lolipop_color (const char *buffer) {
   return [NSColor colorWithRed:model[0] green:model[1] blue:model[2] alpha:0.6];
 }
 
-void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
+void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
   CGFloat (^cubic_bezier) (CGFloat) = ^CGFloat (CGFloat time) {
     if (time < 0.5)
       return 4 * time * time * time;
@@ -166,7 +166,7 @@ void lolipop_at (NSPoint new_pos, NSSize new_size, NSView *view) {
   [CATransaction commit];
 }
 
-static void lolipop_lick (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
+static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
   NSWindow *window   = [NSApp mainWindow];
   NSView   *view     = window.contentView;
   NSPoint   new_pos  = NSMakePoint (x, view.bounds.size.height - y - h);
@@ -182,14 +182,14 @@ static void lolipop_lick (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
   }
 
   if (lolipop.last_bool)
-    lolipop_at (new_pos, new_size, view);
+    lolipop_crush (new_pos, new_size, view);
 
   lolipop.last_pos  = new_pos;
   lolipop.last_size = new_size;
   lolipop.last_bool = YES;
 }
 
-static emacs_value lolipop_chew (emacs_env *env, ptrdiff_t nargs,
+static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
                                  emacs_value *args, void *data) {
   if (nargs != 5)
     goto home;
@@ -207,7 +207,7 @@ static emacs_value lolipop_chew (emacs_env *env, ptrdiff_t nargs,
   free (buffer);
 
   dispatch_async (dispatch_get_main_queue (), ^{
-    lolipop_lick ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h);
+    lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h);
   });
 
 home:
@@ -218,8 +218,8 @@ int emacs_module_init (struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment (runtime);
 
   emacs_value function =
-      env->make_function (env, 5, 5, lolipop_chew, "Lolipop dissolves.", NULL);
-  emacs_value symbol = env->intern (env, "lolipop-chew");
+      env->make_function (env, 5, 5, lolipop_lick, "Lolipop dissolves.", NULL);
+  emacs_value symbol = env->intern (env, "lolipop-lick");
   emacs_value args[] = {symbol, function};
 
   env->funcall (env, env->intern (env, "defalias"), 2, args);
