@@ -2,7 +2,19 @@
 
 ;; Copyright (C) 2025 Jing Huang <rne.kou@icloud.com>
 
+(defvar lolipop--timer nil
+  "Timer used to rate-limit cursor animations.")
+
+(defun lolipop-savor ()
+  "Cancel exisiting timer and schedule a new one."
+  (when (timerp lolipop--timer)
+    (cancel-timer lolipop--timer))
+  (setq lolipop--timer
+        (run-with-idle-timer 0.02 nil 'lolipop-unwrap)))
+
 (defun lolipop-unwrap ()
+  "Calculate current cursor position, size and color, then call
+`lolipop-lick' which does all of the heavy lifting."
   (when-let* ((visible (or (pos-visible-in-window-p)
                            (and (redisplay)
                                 (pos-visible-in-window-p))))
@@ -27,13 +39,13 @@
 
 ;;;###autoload
 (define-minor-mode lolipop-mode
-  "Toggle trace for your cursor."
+  "Toggle rendering of cursor animations."
   :init-value nil
   (if lolipop-mode
       (progn
         (unless (functionp 'lolipop-lick)
           (load "lolipop-core"))
-        (add-hook 'post-command-hook 'lolipop-unwrap nil t))
-    (remove-hook 'post-command-hook 'lolipop-unwrap t)))
+        (add-hook 'post-command-hook 'lolipop-savor nil t))
+    (remove-hook 'post-command-hook 'lolipop-savor t)))
 
 (provide 'lolipop-mode)
