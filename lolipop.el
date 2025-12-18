@@ -28,11 +28,12 @@
 ;;;###autoload
 (define-minor-mode lolipop-mode
   "Toggle trace for your cursor."
-  :global t
+  :init-value nil
   (if lolipop-mode
       (progn
-        (load "lolipop-core")
-        (add-hook 'post-command-hook 'lolipop-crush))
-    (remove-hook 'post-command-hook 'lolipop-crush)))
+        (unless (functionp 'lolipop-lick)
+          (load "lolipop-core"))
+        (add-hook 'post-command-hook 'lolipop-unwrap nil t))
+    (remove-hook 'post-command-hook 'lolipop-unwrap t)))
 
 (provide 'lolipop-mode)
