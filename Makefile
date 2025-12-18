@@ -2,7 +2,7 @@ EMACS_INCLUDE := /Applications/Emacs.app/Contents/Resources/include
 INSTALL_DIR   := $(HOME)/.emacs.d/core
 
 CC      := clang
-CFLAGS  := -fPIC -shared
+CFLAGS  := -fPIC -fobjc-arc -shared
 LDFLAGS := -framework AppKit -framework QuartzCore
 
 MODULE  := lolipop-core.dylib
