@@ -32,25 +32,24 @@
               (coordinate (posn-x-y cursor))
               (window (posn-window cursor))
               (edges (window-inside-pixel-edges window)))
-    (apply 'lolipop-lick
-           (list
-            (+ (car coordinate) (nth 0 edges))
-            (+ (cdr coordinate) (nth 1 edges)) ; TODO: handle descent
-            (if-let* ((cursor (point))
-                      (glyph (and (< cursor (point-max))
-                                  (aref (font-get-glyphs
-                                         (font-at cursor)
-                                         cursor
-                                         (1+ cursor)) 0))))
-                (aref glyph 4)
-              (frame-char-width))
-            (if-let* ((cursor (point))
-                      (font (and (not (equal cursor (line-end-position)))
-                                 (font-info
-                                  (font-at cursor)))))
-                (aref font 3)
-              (line-pixel-height))
-            (frame-parameter nil 'cursor-color)))))
+    (apply #'lolipop-lick
+           (+ (car coordinate) (nth 0 edges))
+           (+ (cdr coordinate) (nth 1 edges)) ; TODO: handle descent
+           (if-let* ((cursor (point))
+                     (glyph (and (< cursor (point-max))
+                                 (aref (font-get-glyphs
+                                        (font-at cursor)
+                                        cursor
+                                        (1+ cursor)) 0))))
+               (aref glyph 4)
+             (frame-char-width))
+           (if-let* ((cursor (point))
+                     (font (and (not (equal cursor (line-end-position)))
+                                (font-info
+                                 (font-at cursor)))))
+               (aref font 3)
+             (line-pixel-height))
+           (color-name-to-rgb (frame-parameter nil 'cursor-color)))))
 
 ;;;###autoload
 (define-minor-mode lolipop-mode

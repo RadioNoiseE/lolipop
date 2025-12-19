@@ -17,17 +17,6 @@ typedef struct {
 
 static lolipop_state lolipop;
 
-static NSColor *lolipop_color (const char *buffer) {
-  char         *end;
-  unsigned long color = strtoul (++buffer, &end, 16);
-  CGFloat       model[3];
-
-  for (int i = 0; i < 3; i++)
-    model[i] = ((color >> (16 - 8 * i)) & 0xFF) / (CGFloat) 255;
-
-  return [NSColor colorWithRed:model[0] green:model[1] blue:model[2] alpha:0.6];
-}
-
 void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
   CGFloat (^cubic_bezier) (CGFloat) = ^CGFloat (CGFloat time) {
     if (time < 0.5)
@@ -191,28 +180,20 @@ static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
 
 static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
                                  emacs_value *args, void *data) {
-  if (nargs != 5) {
-    lolipop.last_bool = NO;
-    goto home;
-  }
-
   int x = env->extract_integer (env, args[0]);
   int y = env->extract_integer (env, args[1]);
   int w = env->extract_integer (env, args[2]);
   int h = env->extract_integer (env, args[3]);
+  double r = env->extract_float (env, args[4]);
+  double g = env->extract_float (env, args[5]);
+  double b = env->extract_float (env, args[6]);
 
-  ptrdiff_t length;
-  env->copy_string_contents (env, args[4], NULL, &length);
-  char *buffer = malloc (length);
-  env->copy_string_contents (env, args[4], buffer, &length);
-  lolipop.color = lolipop_color (buffer);
-  free (buffer);
+  lolipop.color = [NSColor colorWithRed:r green:g blue:b alpha:0.6];
 
   dispatch_async (dispatch_get_main_queue (), ^{
     lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h);
   });
 
-home:
   return env->intern (env, "nil");
 }
 
@@ -220,7 +201,7 @@ int emacs_module_init (struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment (runtime);
 
   emacs_value function =
-      env->make_function (env, 0, 5, lolipop_lick, "Lolipop dissolves.", NULL);
+      env->make_function (env, 7, 7, lolipop_lick, "Lolipop dissolves.", NULL);
   emacs_value symbol = env->intern (env, "lolipop-lick");
   emacs_value args[] = {symbol, function};
 
