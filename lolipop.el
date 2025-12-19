@@ -35,7 +35,7 @@
     (apply 'lolipop-lick
            (list
             (+ (car coordinate) (nth 0 edges))
-            (+ (cdr coordinate) (nth 1 edges))
+            (+ (cdr coordinate) (nth 1 edges)) ; TODO: handle descent
             (if-let* ((cursor (point))
                       (glyph (and (< cursor (point-max))
                                   (aref (font-get-glyphs
@@ -44,7 +44,12 @@
                                          (1+ cursor)) 0))))
                 (aref glyph 4)
               (frame-char-width))
-            (line-pixel-height)
+            (if-let* ((cursor (point))
+                      (font (and (not (equal cursor (line-end-position)))
+                                 (font-info
+                                  (font-at cursor)))))
+                (aref font 3)
+              (line-pixel-height))
             (frame-parameter nil 'cursor-color)))))
 
 ;;;###autoload
