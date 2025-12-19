@@ -180,10 +180,16 @@ static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
 
 static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
                                  emacs_value *args, void *data) {
+  if (nargs != 7) {
+    lolipop.last_bool = NO;
+    goto home;
+  }
+
   int x = env->extract_integer (env, args[0]);
   int y = env->extract_integer (env, args[1]);
   int w = env->extract_integer (env, args[2]);
   int h = env->extract_integer (env, args[3]);
+
   double r = env->extract_float (env, args[4]);
   double g = env->extract_float (env, args[5]);
   double b = env->extract_float (env, args[6]);
@@ -194,6 +200,7 @@ static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
     lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h);
   });
 
+home:
   return env->intern (env, "nil");
 }
 
@@ -201,7 +208,7 @@ int emacs_module_init (struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment (runtime);
 
   emacs_value function =
-      env->make_function (env, 7, 7, lolipop_lick, "Lolipop dissolves.", NULL);
+      env->make_function (env, 0, 7, lolipop_lick, "Lolipop dissolves.", NULL);
   emacs_value symbol = env->intern (env, "lolipop-lick");
   emacs_value args[] = {symbol, function};
 
