@@ -20,7 +20,7 @@
           (memq this-command lolipop-filter-commands))
       (lolipop-lick nil)
     (setq lolipop--timer
-          (run-with-idle-timer 0.02 nil 'lolipop-unwrap))))
+          (run-with-idle-timer 0.02 nil #'lolipop-unwrap))))
 
 (defun lolipop-unwrap ()
   "Calculate current cursor position, size and color, then call
@@ -59,7 +59,7 @@
       (progn
         (unless (functionp 'lolipop-lick)
           (load "lolipop-core"))
-        (add-hook 'post-command-hook 'lolipop-savor))
-    (remove-hook 'post-command-hook 'lolipop-savor)))
+        (add-hook 'post-command-hook #'lolipop-savor))
+    (remove-hook 'post-command-hook #'lolipop-savor)))
 
 (provide 'lolipop-mode)
