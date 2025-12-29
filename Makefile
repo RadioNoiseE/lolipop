@@ -5,8 +5,8 @@ CC      := clang
 CFLAGS  := -fPIC -fobjc-arc -shared
 LDFLAGS := -framework AppKit -framework QuartzCore
 
-MODULE  := lolipop-core.dylib
-LISP    := lolipop-mode.el
+MODULE := lolipop-core.dylib
+LISP   := lolipop-mode.el
 
 .PHONY: all install clean
 
