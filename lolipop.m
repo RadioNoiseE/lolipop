@@ -155,7 +155,8 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
   [CATransaction commit];
 }
 
-static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
+static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h,
+                          BOOL render) {
   NSWindow *window   = [NSApp mainWindow];
   NSView   *view     = window.contentView;
   NSPoint   new_pos  = NSMakePoint (x, view.bounds.size.height - y - h);
@@ -170,7 +171,7 @@ static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
     lolipop.last_bool = NO;
   }
 
-  if (lolipop.last_bool)
+  if (lolipop.last_bool && render)
     lolipop_crush (new_pos, new_size, view);
 
   lolipop.last_pos  = new_pos;
@@ -180,35 +181,38 @@ static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h) {
 
 static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
                                  emacs_value *args, void *data) {
-  if (nargs != 7) {
-    lolipop.last_bool = NO;
-    goto home;
-  }
+  int x = env->extract_integer (env, args[1]);
+  int y = env->extract_integer (env, args[2]);
+  int w = env->extract_integer (env, args[3]);
+  int h = env->extract_integer (env, args[4]);
 
-  int x = env->extract_integer (env, args[0]);
-  int y = env->extract_integer (env, args[1]);
-  int w = env->extract_integer (env, args[2]);
-  int h = env->extract_integer (env, args[3]);
+  double r = env->extract_float (env, args[5]);
+  double g = env->extract_float (env, args[6]);
+  double b = env->extract_float (env, args[7]);
 
-  double r = env->extract_float (env, args[4]);
-  double g = env->extract_float (env, args[5]);
-  double b = env->extract_float (env, args[6]);
 
   lolipop.color = [NSColor colorWithRed:r green:g blue:b alpha:0.6];
+  BOOL render = env->is_not_nil (env, args[0]);
 
   dispatch_async (dispatch_get_main_queue (), ^{
-    lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h);
+    lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h, render);
   });
 
-home:
   return env->intern (env, "nil");
 }
 
 int emacs_module_init (struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment (runtime);
 
-  emacs_value function =
-      env->make_function (env, 0, 7, lolipop_lick, "Lolipop dissolves.", NULL);
+  emacs_value function = env->make_function (
+      env, 8, 8, lolipop_lick,
+      "The event-driven interface for cursor animation.\n\n"
+      "X and Y are the coordinates of the current cursor, while WIDTH and\n"
+      "HEIGHT are its size.  RED, GREEN and BLUE are the three corresponding\n"
+      "channel values for the cursor color.\n\n"
+      "If RENDER is nil, no animation will be drawn.\n\n"
+      "(fn RENDER X Y WIDTH HEIGHT RED GREEN BLUE)",
+      NULL);
   emacs_value symbol = env->intern (env, "lolipop-lick");
   emacs_value args[] = {symbol, function};
 

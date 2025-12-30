@@ -18,13 +18,16 @@
   (if (or (memq major-mode lolipop-filter-modes)
           (seq-intersection local-minor-modes lolipop-filter-modes)
           (memq this-command lolipop-filter-commands))
-      (lolipop-lick nil)
+      (lolipop-unwrap t)
     (setq lolipop--timer
-          (run-with-idle-timer 0.01 nil #'lolipop-unwrap))))
+          (run-with-idle-timer 0.02 nil #'lolipop-unwrap))))
 
-(defun lolipop-unwrap ()
-  "Calculate current cursor position, size and color, then call
-`lolipop-lick' which does all of the heavy lifting."
+(defun lolipop-unwrap (&optional hide)
+  "Calculate required information of the current cursor, namely position,
+size and color, then call `lolipop-lick' which does all heavy lifting.
+
+If the optional argument HIDE is non-nil, the cursor animation will not
+be drawn; in this case only the cursor state will be updated."
   (when-let* ((visible (or (pos-visible-in-window-p)
                            (and (redisplay)
                                 (pos-visible-in-window-p))))
@@ -33,6 +36,7 @@
               (window (posn-window cursor))
               (edges (window-inside-pixel-edges window)))
     (apply #'lolipop-lick
+           (if hide nil t)
            (+ (car coordinate) (nth 0 edges))
            (+ (cdr coordinate) (nth 1 edges)) ; TODO: handle descent
            (if-let* ((cursor (point))
