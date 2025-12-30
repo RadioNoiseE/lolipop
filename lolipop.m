@@ -2,7 +2,7 @@
 #include <QuartzCore/QuartzCore.h>
 #include <emacs-module.h>
 
-#define epsilon 6
+#define epsilon 1e-3
 
 int plugin_is_GPL_compatible;
 
@@ -206,12 +206,18 @@ int emacs_module_init (struct emacs_runtime *runtime) {
 
   emacs_value function = env->make_function (
       env, 8, 8, lolipop_lick,
-      "The event-driven interface for cursor animation.\n\n"
-      "X and Y are the coordinates of the current cursor, while WIDTH and\n"
-      "HEIGHT are its size.  RED, GREEN and BLUE are the three corresponding\n"
-      "channel values for the cursor color.\n\n"
-      "If RENDER is nil, no animation will be drawn.\n\n"
-      "(fn RENDER X Y WIDTH HEIGHT RED GREEN BLUE)",
+      R"(Render the cursor animation on a separate window layer.
+
+RENDER controls whether the cursor animation is rendered.  X and Y
+specify the cursor position in pixels.  WIDTH and HEIGHT specify the
+cursor size.  RED, GREEN and BLUE specify the cursor color channels.
+
+The animation is rendered on a dedicated layer attached to current
+frame and does not participate in Emacs redisplay.
+
+If RENDER is nil, no animation is rendered.
+
+(fn RENDER X Y WIDTH HEIGHT RED GREEN BLUE))",
       NULL);
   emacs_value symbol = env->intern (env, "lolipop-lick");
   emacs_value args[] = {symbol, function};
