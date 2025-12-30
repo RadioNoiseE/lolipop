@@ -18,7 +18,7 @@ typedef struct {
 static lolipop_state lolipop;
 
 void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
-  CGFloat (^cubic_bezier) (CGFloat) = ^CGFloat (CGFloat time) {
+  CGFloat (^bezier) (CGFloat) = ^CGFloat (CGFloat time) {
     if (time < 0.5)
       return 4 * time * time * time;
     time = 2 * time - 2;
@@ -60,9 +60,9 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
 
   for (int step = 0; step <= steps; step++) {
     CGFloat alpha = (CGFloat) step / steps;
-    CGFloat fast  = cubic_bezier (clamp (1.6 * alpha));
-    CGFloat norm  = cubic_bezier (clamp (1.6 * (alpha - 0.2)));
-    CGFloat slow  = cubic_bezier (clamp (1.6 * (alpha - 0.4)));
+    CGFloat fast  = bezier (clamp (1.6 * alpha));
+    CGFloat norm  = bezier (clamp (1.6 * (alpha - 0.2)));
+    CGFloat slow  = bezier (clamp (1.6 * (alpha - 0.4)));
     CGFloat tl_time, tr_time, br_time, bl_time;
 
     if (fabs (dx) < epsilon) {
@@ -190,8 +190,8 @@ static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
   double g = env->extract_float (env, args[6]);
   double b = env->extract_float (env, args[7]);
 
+  lolipop.color = [NSColor colorWithRed:r green:g blue:b alpha:1];
 
-  lolipop.color = [NSColor colorWithRed:r green:g blue:b alpha:0.6];
   BOOL render = env->is_not_nil (env, args[0]);
 
   dispatch_async (dispatch_get_main_queue (), ^{
