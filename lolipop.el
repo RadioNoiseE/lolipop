@@ -3,16 +3,33 @@
 ;; Copyright (C) 2025 Jing Huang <rne.kou@icloud.com>
 
 (defvar lolipop--timer nil
-  "Timer used to rate-limit cursor animations.")
+  "Idle timer used to rate-limit cursor animations.
+
+This timer is canceled and rescheduled on each command in order to delay
+animation updates until Emacs becomes idle.")
 
 (defvar lolipop-filter-modes nil
-  "List of major and minor modes that need spacial care.")
+  "List of modes for which cursor animations are suppressed.
+
+If the current major mode or any enabled minor mode is a member of this
+list, cursor animations will not be rendered.")
 
 (defvar lolipop-filter-commands nil
-  "List of commands that need special care.")
+  "List of commands for which cursor animations are suppressed.
+
+If `this-command' is a member of this list, cursor animations will not
+be rendered.  See also `post-command-hook'.")
 
 (defun lolipop-savor ()
-  "Determine whether the animation should be rendered."
+  "Determine whether and when to update the cursor animation.
+
+If the current context matches any entry in `lolipop-filter-modes' or
+`lolipop-filter-commands', the cursor state is updated immediately
+with no cursor animation rendered.
+
+Otherwise, schedule an idle timer `lolipop--timer' to update and render
+the cursor animation after a short delay.  Any previously scheduled
+timer is canceled before scheduling a new one."
   (when (timerp lolipop--timer)
     (cancel-timer lolipop--timer))
   (if (or (memq major-mode lolipop-filter-modes)
@@ -23,11 +40,15 @@
           (run-with-idle-timer 0.02 nil #'lolipop-unwrap))))
 
 (defun lolipop-unwrap (&optional hide)
-  "Calculate required information of the current cursor, namely position,
-size and color, then call `lolipop-lick' which does all heavy lifting.
+  "Collect cursor geometry and color, then invoke `lolipop-lick'.
 
-If the optional argument HIDE is non-nil, the cursor animation will not
-be drawn; in this case only the cursor state will be updated."
+This function computes the pixel position, size and color of the cursor.
+The coordinates supplied are relative to the top-left corner of the
+window; any further coordinate transformation is handled by
+`lolipop-lick'.
+
+If the optional argument HIDE is non-nil, the cursor animation is not
+rendered.  In this case, only the internal cursor state is updated."
   (when-let* ((visible (or (pos-visible-in-window-p)
                            (and (redisplay)
                                 (pos-visible-in-window-p))))
