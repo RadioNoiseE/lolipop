@@ -20,9 +20,9 @@ static lolipop_state lolipop;
 void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
   CGFloat (^bezier) (CGFloat) = ^CGFloat (CGFloat time) {
     if (time < 0.5)
-      return 4 * time * time * time;
+      return 4 * pow (time, 3);
     time = 2 * time - 2;
-    return 0.5 * time * time * time + 1;
+    return 0.5 * pow (time, 3) + 1;
   };
 
   CGFloat (^clamp) (CGFloat) = ^CGFloat (CGFloat x) {
