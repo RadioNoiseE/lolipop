@@ -26,25 +26,27 @@ typedef struct {
   NSWindow *window;
   NSView   *view;
   NSColor  *color;
-  NSPoint   last_pos;
-  NSSize    last_size;
-  BOOL      last_bool;
+  BOOL      state;
+  NSPoint   previous_position;
+  NSSize    previous_geometry;
 } lolipop_state;
 
 static lolipop_state lolipop;
 
-void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
-  if (NSEqualPoints (new_pos, lolipop.last_pos))
+static void lolipop_crush (NSPoint current_position, NSSize current_geometry,
+                           NSView *view) {
+  if (NSEqualPoints (current_position, lolipop.previous_position))
     return;
 
-  NSRect last_cursor =
-      NSMakeRect (lolipop.last_pos.x, lolipop.last_pos.y,
-                  lolipop.last_size.width, lolipop.last_size.height);
-  NSRect new_cursor =
-      NSMakeRect (new_pos.x, new_pos.y, new_size.width, new_size.height);
+  NSRect previous_cursor = NSMakeRect (
+      lolipop.previous_position.x, lolipop.previous_position.y,
+      lolipop.previous_geometry.width, lolipop.previous_geometry.height);
+  NSRect current_cursor =
+      NSMakeRect (current_position.x, current_position.y,
+                  current_geometry.width, current_geometry.height);
 
-  CGFloat dx = new_pos.x - lolipop.last_pos.x;
-  CGFloat dy = new_pos.y - lolipop.last_pos.y;
+  CGFloat dx = current_position.x - lolipop.previous_position.x;
+  CGFloat dy = current_position.y - lolipop.previous_position.y;
 
   CGFloat distance = hypot (dx, dy);
   CGFloat duration = 0.6 * tanh (distance / 400);
@@ -63,70 +65,74 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
     CGFloat fast  = BEZIER (CLAMP01 (1.6 * alpha));
     CGFloat norm  = BEZIER (CLAMP01 (1.6 * (alpha - 0.2)));
     CGFloat slow  = BEZIER (CLAMP01 (1.6 * (alpha - 0.4)));
-    CGFloat tl_time, tr_time, br_time, bl_time;
+    CGFloat tl_ease, tr_ease, br_ease, bl_ease;
 
     if (fabs (dx) < CGFLOAT_EPSILON) {
       if (dy > 0) {
-        tl_time = slow;
-        tr_time = slow;
-        br_time = fast;
-        bl_time = fast;
+        tl_ease = slow;
+        tr_ease = slow;
+        br_ease = fast;
+        bl_ease = fast;
       } else {
-        tl_time = fast;
-        tr_time = fast;
-        br_time = slow;
-        bl_time = slow;
+        tl_ease = fast;
+        tr_ease = fast;
+        br_ease = slow;
+        bl_ease = slow;
       }
     } else if (fabs (dy) < CGFLOAT_EPSILON) {
       if (dx > 0) {
-        tl_time = slow;
-        tr_time = fast;
-        br_time = fast;
-        bl_time = slow;
+        tl_ease = slow;
+        tr_ease = fast;
+        br_ease = fast;
+        bl_ease = slow;
       } else {
-        tl_time = fast;
-        tr_time = slow;
-        br_time = slow;
-        bl_time = fast;
+        tl_ease = fast;
+        tr_ease = slow;
+        br_ease = slow;
+        bl_ease = fast;
       }
     } else if (dx > 0) {
       if (dy > 0) {
-        tl_time = slow;
-        tr_time = norm;
-        br_time = fast;
-        bl_time = norm;
+        tl_ease = slow;
+        tr_ease = norm;
+        br_ease = fast;
+        bl_ease = norm;
       } else {
-        tl_time = norm;
-        tr_time = fast;
-        br_time = norm;
-        bl_time = slow;
+        tl_ease = norm;
+        tr_ease = fast;
+        br_ease = norm;
+        bl_ease = slow;
       }
     } else {
       if (dy > 0) {
-        tl_time = norm;
-        tr_time = slow;
-        br_time = norm;
-        bl_time = fast;
+        tl_ease = norm;
+        tr_ease = slow;
+        br_ease = norm;
+        bl_ease = fast;
       } else {
-        tl_time = fast;
-        tr_time = norm;
-        br_time = slow;
-        bl_time = norm;
+        tl_ease = fast;
+        tr_ease = norm;
+        br_ease = slow;
+        bl_ease = norm;
       }
     }
 
     CGPoint pos_tl =
-        LERP (CGPointMake (NSMinX (last_cursor), NSMinY (last_cursor)),
-              CGPointMake (NSMinX (new_cursor), NSMinY (new_cursor)), tl_time);
+        LERP (CGPointMake (NSMinX (previous_cursor), NSMinY (previous_cursor)),
+              CGPointMake (NSMinX (current_cursor), NSMinY (current_cursor)),
+              tl_ease);
     CGPoint pos_tr =
-        LERP (CGPointMake (NSMaxX (last_cursor), NSMinY (last_cursor)),
-              CGPointMake (NSMaxX (new_cursor), NSMinY (new_cursor)), tr_time);
+        LERP (CGPointMake (NSMaxX (previous_cursor), NSMinY (previous_cursor)),
+              CGPointMake (NSMaxX (current_cursor), NSMinY (current_cursor)),
+              tr_ease);
     CGPoint pos_br =
-        LERP (CGPointMake (NSMaxX (last_cursor), NSMaxY (last_cursor)),
-              CGPointMake (NSMaxX (new_cursor), NSMaxY (new_cursor)), br_time);
+        LERP (CGPointMake (NSMaxX (previous_cursor), NSMaxY (previous_cursor)),
+              CGPointMake (NSMaxX (current_cursor), NSMaxY (current_cursor)),
+              br_ease);
     CGPoint pos_bl =
-        LERP (CGPointMake (NSMinX (last_cursor), NSMaxY (last_cursor)),
-              CGPointMake (NSMinX (new_cursor), NSMaxY (new_cursor)), bl_time);
+        LERP (CGPointMake (NSMinX (previous_cursor), NSMaxY (previous_cursor)),
+              CGPointMake (NSMinX (current_cursor), NSMaxY (current_cursor)),
+              bl_ease);
 
     CGMutablePathRef path = CGPathCreateMutable ();
 
@@ -157,47 +163,49 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
   [CATransaction commit];
 }
 
-static void lolipop_chew (CGFloat x, CGFloat y, CGFloat w, CGFloat h,
+static void lolipop_chew (CGFloat x, CGFloat y, CGFloat width, CGFloat height,
                           BOOL render) {
   NSWindow *window   = [NSApp mainWindow];
   NSView   *view     = window.contentView;
-  NSPoint   new_pos  = NSMakePoint (x, view.bounds.size.height - y - h);
-  NSSize    new_size = NSMakeSize (w, h);
+  NSPoint   position = NSMakePoint (x, view.bounds.size.height - y - height);
+  NSSize    geometry = NSMakeSize (width, height);
 
   if (!view.layer)
     view.wantsLayer = YES;
 
   if (lolipop.window != window) {
-    lolipop.window    = window;
-    lolipop.view      = view;
-    lolipop.last_bool = NO;
+    lolipop.window = window;
+    lolipop.view   = view;
+    lolipop.state  = NO;
   }
 
-  if (lolipop.last_bool && render)
-    lolipop_crush (new_pos, new_size, view);
+  if (lolipop.state && render)
+    lolipop_crush (position, geometry, view);
 
-  lolipop.last_pos  = new_pos;
-  lolipop.last_size = new_size;
-  lolipop.last_bool = YES;
+  lolipop.state             = YES;
+  lolipop.previous_position = position;
+  lolipop.previous_geometry = geometry;
 }
 
 static emacs_value lolipop_lick (emacs_env *env, ptrdiff_t nargs,
                                  emacs_value *args, void *data) {
-  int x = env->extract_integer (env, args[1]);
-  int y = env->extract_integer (env, args[2]);
-  int w = env->extract_integer (env, args[3]);
-  int h = env->extract_integer (env, args[4]);
-
-  double r = env->extract_float (env, args[5]);
-  double g = env->extract_float (env, args[6]);
-  double b = env->extract_float (env, args[7]);
-
-  lolipop.color = [NSColor colorWithRed:r green:g blue:b alpha:1];
-
   BOOL render = env->is_not_nil (env, args[0]);
 
+  int x = env->extract_integer (env, args[1]);
+  int y = env->extract_integer (env, args[2]);
+
+  int width  = env->extract_integer (env, args[3]);
+  int height = env->extract_integer (env, args[4]);
+
+  double red   = env->extract_float (env, args[5]);
+  double green = env->extract_float (env, args[6]);
+  double blue  = env->extract_float (env, args[7]);
+
+  lolipop.color = [NSColor colorWithRed:red green:green blue:blue alpha:1];
+
   dispatch_async (dispatch_get_main_queue (), ^{
-    lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) w, (CGFloat) h, render);
+    lolipop_chew ((CGFloat) x, (CGFloat) y, (CGFloat) width, (CGFloat) height,
+                  render);
   });
 
   return env->intern (env, "nil");
@@ -217,7 +225,7 @@ cursor size.  RED, GREEN and BLUE specify the cursor color channels.
 The animation is rendered on a dedicated layer attached to current
 frame and does not participate in Emacs redisplay.
 
-If RENDER is nil, no animation is rendered.
+If RENDER is nil, only internal cursor state is updated.
 
 (fn RENDER X Y WIDTH HEIGHT RED GREEN BLUE))",
       NULL);
