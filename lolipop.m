@@ -50,16 +50,17 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
   CGFloat distance = hypot (dx, dy);
   CGFloat duration = 0.6 * tanh (distance / 400);
 
-  int steps = duration * 120;
+  NSScreen *screen = view.window.screen ?: [NSScreen mainScreen];
+  int       frames = duration * screen.maximumFramesPerSecond;
 
   CAShapeLayer *layer = [CAShapeLayer layer];
   layer.fillColor     = lolipop.color.CGColor;
   [view.layer addSublayer:layer];
 
-  NSMutableArray *paths = [NSMutableArray arrayWithCapacity:steps + 1];
+  NSMutableArray *paths = [NSMutableArray arrayWithCapacity:frames + 1];
 
-  for (int step = 0; step <= steps; step++) {
-    CGFloat alpha = (CGFloat) step / steps;
+  for (int frame = 0; frame <= frames; frame++) {
+    CGFloat alpha = (CGFloat) frame / frames;
     CGFloat fast  = bezier (clamp (1.6 * alpha));
     CGFloat norm  = bezier (clamp (1.6 * (alpha - 0.2)));
     CGFloat slow  = bezier (clamp (1.6 * (alpha - 0.4)));
