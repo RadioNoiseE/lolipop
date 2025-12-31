@@ -51,7 +51,7 @@ static void lolipop_crush (NSPoint current_position, NSSize current_geometry,
   CGFloat duration = 0.6 * tanh (distance / 400);
 
   NSScreen *screen = view.window.screen ?: [NSScreen mainScreen];
-  int       frames = duration * screen.maximumFramesPerSecond;
+  int       frames = ceil (duration * screen.maximumFramesPerSecond);
 
   CAShapeLayer *layer = [CAShapeLayer layer];
   layer.fillColor     = lolipop.color.CGColor;
@@ -116,29 +116,29 @@ static void lolipop_crush (NSPoint current_position, NSSize current_geometry,
       }
     }
 
-    CGPoint pos_tl =
+    CGPoint tl_position =
         LERP (CGPointMake (NSMinX (previous_cursor), NSMinY (previous_cursor)),
               CGPointMake (NSMinX (current_cursor), NSMinY (current_cursor)),
               tl_ease);
-    CGPoint pos_tr =
+    CGPoint tr_position =
         LERP (CGPointMake (NSMaxX (previous_cursor), NSMinY (previous_cursor)),
               CGPointMake (NSMaxX (current_cursor), NSMinY (current_cursor)),
               tr_ease);
-    CGPoint pos_br =
+    CGPoint br_position =
         LERP (CGPointMake (NSMaxX (previous_cursor), NSMaxY (previous_cursor)),
               CGPointMake (NSMaxX (current_cursor), NSMaxY (current_cursor)),
               br_ease);
-    CGPoint pos_bl =
+    CGPoint bl_position =
         LERP (CGPointMake (NSMinX (previous_cursor), NSMaxY (previous_cursor)),
               CGPointMake (NSMinX (current_cursor), NSMaxY (current_cursor)),
               bl_ease);
 
     CGMutablePathRef path = CGPathCreateMutable ();
 
-    CGPathMoveToPoint (path, NULL, pos_tl.x, pos_tl.y);
-    CGPathAddLineToPoint (path, NULL, pos_tr.x, pos_tr.y);
-    CGPathAddLineToPoint (path, NULL, pos_br.x, pos_br.y);
-    CGPathAddLineToPoint (path, NULL, pos_bl.x, pos_bl.y);
+    CGPathMoveToPoint (path, NULL, tl_position.x, tl_position.y);
+    CGPathAddLineToPoint (path, NULL, tr_position.x, tr_position.y);
+    CGPathAddLineToPoint (path, NULL, br_position.x, br_position.y);
+    CGPathAddLineToPoint (path, NULL, bl_position.x, bl_position.y);
     CGPathCloseSubpath (path);
 
     [paths addObject:(__bridge id) path];
@@ -155,10 +155,8 @@ static void lolipop_crush (NSPoint current_position, NSSize current_geometry,
   [CATransaction setCompletionBlock:^{
     [layer removeFromSuperlayer];
   }];
-
   [layer addAnimation:animation forKey:nil];
   layer.path = (__bridge CGPathRef) paths.lastObject;
-
   [CATransaction commit];
 }
 
