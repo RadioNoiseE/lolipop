@@ -14,8 +14,7 @@
   })
 #define LERP(a, b, t)                                                          \
   ({                                                                           \
-    CGPoint _a = (a);                                                          \
-    CGPoint _b = (b);                                                          \
+    CGPoint _a = (a), _b = (b);                                                \
     CGFloat _t = (t);                                                          \
     CGPointMake (_a.x + (_b.x - _a.x) * _t, _a.y + (_b.y - _a.y) * _t);        \
   })
