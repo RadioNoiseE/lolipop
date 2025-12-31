@@ -2,7 +2,23 @@
 #include <QuartzCore/QuartzCore.h>
 #include <emacs-module.h>
 
-#define epsilon 1e-3
+#define BEZIER(t)                                                              \
+  ({                                                                           \
+    CGFloat _t = (t);                                                          \
+    _t < 0.5 ? 4 * _t *_t *_t : (0.5 * ((_t = 2 * _t - 2), _t * _t * _t) + 1); \
+  })
+#define CLAMP01(x)                                                             \
+  ({                                                                           \
+    CGFloat _x = (x);                                                          \
+    _x < 0 ? 0 : (_x > 1 ? 1 : _x);                                            \
+  })
+#define LERP(a, b, t)                                                          \
+  ({                                                                           \
+    CGPoint _a = (a);                                                          \
+    CGPoint _b = (b);                                                          \
+    CGFloat _t = (t);                                                          \
+    CGPointMake (_a.x + (_b.x - _a.x) * _t, _a.y + (_b.y - _a.y) * _t);        \
+  })
 
 int plugin_is_GPL_compatible;
 
@@ -18,23 +34,6 @@ typedef struct {
 static lolipop_state lolipop;
 
 void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
-  CGFloat (^bezier) (CGFloat) = ^CGFloat (CGFloat time) {
-    if (time < 0.5)
-      return 4 * pow (time, 3);
-    time = 2 * time - 2;
-    return 0.5 * pow (time, 3) + 1;
-  };
-
-  CGFloat (^clamp) (CGFloat) = ^CGFloat (CGFloat x) {
-    return x < 0 ? 0 : (x > 1 ? 1 : x);
-  };
-
-  CGPoint (^interpolate) (CGPoint, CGPoint, CGFloat) =
-      ^CGPoint (CGPoint from, CGPoint to, CGFloat time) {
-        return CGPointMake (from.x + (to.x - from.x) * time,
-                            from.y + (to.y - from.y) * time);
-      };
-
   if (NSEqualPoints (new_pos, lolipop.last_pos))
     return;
 
@@ -61,12 +60,12 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
 
   for (int frame = 0; frame <= frames; frame++) {
     CGFloat alpha = (CGFloat) frame / frames;
-    CGFloat fast  = bezier (clamp (1.6 * alpha));
-    CGFloat norm  = bezier (clamp (1.6 * (alpha - 0.2)));
-    CGFloat slow  = bezier (clamp (1.6 * (alpha - 0.4)));
+    CGFloat fast  = BEZIER (CLAMP01 (1.6 * alpha));
+    CGFloat norm  = BEZIER (CLAMP01 (1.6 * (alpha - 0.2)));
+    CGFloat slow  = BEZIER (CLAMP01 (1.6 * (alpha - 0.4)));
     CGFloat tl_time, tr_time, br_time, bl_time;
 
-    if (fabs (dx) < epsilon) {
+    if (fabs (dx) < CGFLOAT_EPSILON) {
       if (dy > 0) {
         tl_time = slow;
         tr_time = slow;
@@ -78,7 +77,7 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
         br_time = slow;
         bl_time = slow;
       }
-    } else if (fabs (dy) < epsilon) {
+    } else if (fabs (dy) < CGFLOAT_EPSILON) {
       if (dx > 0) {
         tl_time = slow;
         tr_time = fast;
@@ -117,18 +116,20 @@ void lolipop_crush (NSPoint new_pos, NSSize new_size, NSView *view) {
     }
 
     CGPoint pos_tl =
-        interpolate (last_cursor.origin, new_cursor.origin, tl_time);
-    CGPoint pos_tr = interpolate (
-        CGPointMake (NSMaxX (last_cursor), NSMinY (last_cursor)),
-        CGPointMake (NSMaxX (new_cursor), NSMinY (new_cursor)), tr_time);
-    CGPoint pos_br = interpolate (
-        CGPointMake (NSMaxX (last_cursor), NSMaxY (last_cursor)),
-        CGPointMake (NSMaxX (new_cursor), NSMaxY (new_cursor)), br_time);
-    CGPoint pos_bl = interpolate (
-        CGPointMake (NSMinX (last_cursor), NSMaxY (last_cursor)),
-        CGPointMake (NSMinX (new_cursor), NSMaxY (new_cursor)), bl_time);
+        LERP (CGPointMake (NSMinX (last_cursor), NSMinY (last_cursor)),
+              CGPointMake (NSMinX (new_cursor), NSMinY (new_cursor)), tl_time);
+    CGPoint pos_tr =
+        LERP (CGPointMake (NSMaxX (last_cursor), NSMinY (last_cursor)),
+              CGPointMake (NSMaxX (new_cursor), NSMinY (new_cursor)), tr_time);
+    CGPoint pos_br =
+        LERP (CGPointMake (NSMaxX (last_cursor), NSMaxY (last_cursor)),
+              CGPointMake (NSMaxX (new_cursor), NSMaxY (new_cursor)), br_time);
+    CGPoint pos_bl =
+        LERP (CGPointMake (NSMinX (last_cursor), NSMaxY (last_cursor)),
+              CGPointMake (NSMinX (new_cursor), NSMaxY (new_cursor)), bl_time);
 
     CGMutablePathRef path = CGPathCreateMutable ();
+
     CGPathMoveToPoint (path, NULL, pos_tl.x, pos_tl.y);
     CGPathAddLineToPoint (path, NULL, pos_tr.x, pos_tr.y);
     CGPathAddLineToPoint (path, NULL, pos_br.x, pos_br.y);
