@@ -20,7 +20,7 @@ AlignConsecutiveMacros:
   AcrossComments: true
   AlignCompound: true
   PadOperators: true
-AlignEscapedNewlines: Left
+AlignEscapedNewlines: Right
 AlignOperands: AlignAfterOperator
 AlignTrailingComments:
   Kind: Always
