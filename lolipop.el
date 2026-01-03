@@ -49,31 +49,14 @@ window; any further coordinate transformation is handled by
 
 If the optional argument HIDE is non-nil, the cursor animation is not
 rendered.  In this case, only the internal cursor state is updated."
-  (when-let* ((visible (or (pos-visible-in-window-p)
-                           (and (redisplay)
-                                (pos-visible-in-window-p))))
-              (cursor (posn-at-point))
-              (coordinate (posn-x-y cursor))
-              (window (posn-window cursor))
-              (edges (window-inside-pixel-edges window)))
+  (when-let* ((cursor (window-cursor-info))
+              (edges (window-inside-pixel-edges)))
     (apply #'lolipop-lick
            (if hide nil t)
-           (+ (car coordinate) (nth 0 edges))
-           (+ (cdr coordinate) (nth 1 edges)) ; TODO: handle descent
-           (if-let* ((cursor (point))
-                     (glyph (and (< cursor (point-max))
-                                 (aref (font-get-glyphs
-                                        (font-at cursor)
-                                        cursor
-                                        (1+ cursor)) 0))))
-               (aref glyph 4)
-             (frame-char-width))
-           (if-let* ((cursor (point))
-                     (font (and (not (equal cursor (line-end-position)))
-                                (font-info
-                                 (font-at cursor)))))
-               (aref font 3)
-             (line-pixel-height))
+           (+ (aref cursor 1) (nth 0 edges))
+           (+ (aref cursor 2) (nth 1 edges))
+           (aref cursor 3)
+           (aref cursor 4)
            (color-name-to-rgb (frame-parameter nil 'cursor-color)))))
 
 ;;;###autoload
