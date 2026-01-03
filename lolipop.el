@@ -3,10 +3,10 @@
 ;; Copyright (C) 2025, 2026 Jing Huang <rne.kou@icloud.com>
 
 (defvar lolipop--timer nil
-  "Idle timer used to rate-limit cursor animations.
+  "Throttle timer used to rate-limit cursor animations.
 
-This timer is canceled and rescheduled on each command in order to delay
-animation updates until Emacs becomes idle.")
+This timer is canceled and rescheduled on each command in order to block
+animation updates and reduce flickering.")
 
 (defvar lolipop-filter-modes nil
   "List of modes for which cursor animations are suppressed.
@@ -27,32 +27,42 @@ If the current context matches any entry in `lolipop-filter-modes' or
 `lolipop-filter-commands', the cursor state is updated immediately
 with no cursor animation rendered.
 
-Otherwise, schedule an idle timer `lolipop--timer' to update and render
-the cursor animation after a short delay.  Any previously scheduled
-timer is canceled before scheduling a new one."
-  (when (timerp lolipop--timer)
-    (cancel-timer lolipop--timer))
-  (if (or (memq major-mode lolipop-filter-modes)
-          (seq-intersection local-minor-modes lolipop-filter-modes)
-          (memq this-command lolipop-filter-commands))
-      (lolipop-unwrap t)
-    (setq lolipop--timer
-          (run-with-idle-timer 0.02 nil #'lolipop-unwrap))))
+Otherwise, update and render the cursor animation immediately on the
+first eligible invocation, then suppress further animation updates for a
+short, fixed interval.  During this interval, subsequent invocations do
+nothing.
 
-(defun lolipop-unwrap (&optional hide)
+The throttle state is maintained by `lolipop--timer'."
+  (cond
+   ((or (memq major-mode lolipop-filter-modes)
+        (seq-intersection local-minor-modes lolipop-filter-modes)
+        (memq this-command lolipop-filter-commands))
+    (lolipop-unwrap nil))
+   ((not (and lolipop--timer
+              (timerp lolipop--timer)))
+    (lolipop-unwrap t)
+    (setq lolipop--timer
+          (run-with-idle-timer
+           0.02 nil
+           (lambda ()
+             (cancel-timer lolipop--timer)
+             (setq lolipop--timer nil)))))
+   (t (lolipop-unwrap nil))))
+
+(defun lolipop-unwrap (render)
   "Collect cursor geometry and color, then invoke `lolipop-lick'.
 
 This function computes the pixel position, size and color of the cursor.
 The coordinates supplied are relative to the top-left corner of the
-window; any further coordinate transformation is handled by
-`lolipop-lick'.
+window; any further coordinate transformation is handled elsewhere.
 
-If the optional argument HIDE is non-nil, the cursor animation is not
-rendered.  In this case, only the internal cursor state is updated."
-  (when-let* ((cursor (window-cursor-info))
+The argument RENDER determines whether the cursor animation is rendered.
+If nil, only the internal cursor state is updated."
+  (when-let* ((status (redisplay))
+              (cursor (window-cursor-info))
               (edges (window-inside-pixel-edges)))
     (apply #'lolipop-lick
-           (if hide nil t)
+           render
            (+ (aref cursor 1) (nth 0 edges))
            (+ (aref cursor 2) (nth 1 edges))
            (aref cursor 3)
