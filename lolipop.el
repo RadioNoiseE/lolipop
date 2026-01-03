@@ -1,6 +1,6 @@
 ;;; lolipop-mode.el -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025 Jing Huang <rne.kou@icloud.com>
+;; Copyright (C) 2025, 2026 Jing Huang <rne.kou@icloud.com>
 
 (defvar lolipop--timer nil
   "Idle timer used to rate-limit cursor animations.
