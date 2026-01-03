@@ -58,24 +58,26 @@ window; any further coordinate transformation is handled elsewhere.
 
 The argument RENDER determines whether the cursor animation is rendered.
 If nil, only the internal cursor state is updated."
-  (when-let* ((status (redisplay))
-              (cursor (window-cursor-info))
-              (edges (window-inside-pixel-edges)))
-    (let* ((point (and (pos-visible-in-window-p)
-                       (point)))
-           (glyph (and point
-                       (< point (point-max))
-                       (font-info (font-at point))))
-           (short (and glyph
-                       (< (aref glyph 3) (aref cursor 4)))))
-      (apply #'lolipop-lick
-             render
-             (+ (aref cursor 1) (nth 0 edges))
-             (+ (aref cursor 2) (nth 1 edges)
-                (if short (- (aref cursor 5) (aref glyph 8)) 0))
-             (aref cursor 3)
-             (if short (aref glyph 3) (aref cursor 4))
-             (color-name-to-rgb (frame-parameter nil 'cursor-color))))))
+  (run-with-idle-timer
+   0 nil
+   (lambda ()
+     (when-let* ((cursor (window-cursor-info))
+                 (edges (window-inside-pixel-edges)))
+       (let* ((point (and (pos-visible-in-window-p)
+                          (point)))
+              (glyph (and point
+                          (< point (point-max))
+                          (font-info (font-at point))))
+              (short (and glyph
+                          (< (aref glyph 3) (aref cursor 4)))))
+         (apply #'lolipop-lick
+                render
+                (+ (aref cursor 1) (nth 0 edges))
+                (+ (aref cursor 2) (nth 1 edges)
+                   (if short (- (aref cursor 5) (aref glyph 8)) 0))
+                (aref cursor 3)
+                (if short (aref glyph 3) (aref cursor 4))
+                (color-name-to-rgb (frame-parameter nil 'cursor-color))))))))
 
 ;;;###autoload
 (define-minor-mode lolipop-mode
