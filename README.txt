@@ -3,18 +3,20 @@
     of function Fwindow_cursor_info.
 
 Installation instructions are the same, while there are two variables
-you customize to prevent rendering of cursor animations.  Search for
-filter-modes and commands in group lolipop with describe-function.
+you customize now to prevent rendering of cursor animations when not
+favorable.  Search for filter-modes and filter-commands in the group
+lolipop with describe-function for information.
 
-Changes are switching to debounce to throttling.  As a consequence, we
-will either have to request for redisplay everytime the function is
+Changes include switching from debounce to throttling.  As a result,
+we will either have to request for redisplay everytime the function is
 invoked (since the value returned by window-cursor-info is only
 guaranteed to be correct after a successful redisplay), or we will
-have to wrap it in a run-with-idle-timer with 0 seconds delay.
-Excessive redisplay breaks with-editor (at least magit) so the latter
-one is implemented.
+have to wrap it in a run-with-idle-timer (so when we read cursor
+information from the window structure it is the result after redisplay
+triggered by cursor movement).  Excessive redisplay breaks with-editor
+(at least magit) so the latter one is implemented.
 
-And I hope it now supports mixed font context well enough.  Since we
+And I hope it now supports mixed font context well enough.  Here we
 need to compare the cursor height with the glyph height, then if the
 glyph is shorter, we patch the y-coordinate and the cursor height.
 
