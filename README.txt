@@ -1,24 +1,24 @@
-+++ In order to use this package, you will need an Emacs 31 after
-    commit 48b80a1e2b98f22d8da21f7c89ecfd9861643408, with the addition
-    of function Fwindow_cursor_info.
++++ To use this package, you must use Emacs 31 built from a revision
+    after commit 48b80a, which introduces Fwindow_cursor_info.
 
-Installation instructions are the same, while there are two variables
-you customize now to prevent rendering of cursor animations when not
-favorable.  Search for filter-modes and filter-commands in the group
-lolipop with describe-function for information.
+The installation process remains unchanged.  However, two new
+customization variables have been added to disable cursor animation in
+situations where it is undesirable.  For details, use
+describe-function and look up filter-modes and filter-commands under
+the lolipop customization group.
 
-Changes include switching from debounce to throttling.  As a result,
-we will either have to request for redisplay everytime the function is
-invoked (since the value returned by window-cursor-info is only
-guaranteed to be correct after a successful redisplay), or we will
-have to wrap it in a run-with-idle-timer (so when we read cursor
-information from the window structure it is the result after redisplay
-triggered by cursor movement).  Excessive redisplay breaks with-editor
-(at least magit) so the latter one is implemented.
+One significant change is the switch from debounce to throttling.
+This introduces a design choice: either force redisplay every time the
+function is called (window-cursor-info only returns reliable result
+after a successful redisplay), or defer execution using idle timer,
+ensuring that cursor data is only read after redisplay triggered by
+cursor movement.  Because excessive redisplay interferes with
+with-editor (notably magit), the latter approach was chosen.
 
-And I hope it now supports mixed font context well enough.  Here we
-need to compare the cursor height with the glyph height, then if the
-glyph is shorter, we patch the y-coordinate and the cursor height.
+The package is now expected to handle mixed-font contexts more
+reliably.  This is achieved by comparing the cursor height with the
+glyph height; when the glyph is shorter, the y-coordinate and cursor
+height are patched accordingly.
 
 
 --- The development will be paused for a while, before I finish
