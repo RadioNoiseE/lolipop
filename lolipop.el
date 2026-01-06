@@ -66,6 +66,7 @@ If nil, only the internal cursor state is updated."
        (let* ((point (and (pos-visible-in-window-p)
                           (point)))
               (glyph (and point
+                          (< point (pos-eol))
                           (< point (point-max))
                           (font-info (font-at point))))
               (short (and glyph
