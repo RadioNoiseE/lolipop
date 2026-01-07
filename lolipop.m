@@ -66,7 +66,7 @@ static void lolipop_crush (NSPoint current_position, NSSize current_geometry,
     CGFloat slow  = BEZIER (CLAMP01 (1.6 * (alpha - 0.4)));
     CGFloat tl_ease, tr_ease, br_ease, bl_ease;
 
-    if (fabs (dx) < current_geometry.width) {
+    if (fabs (dx) < current_geometry.width / 2) {
       if (dy > 0) {
         tl_ease = slow;
         tr_ease = slow;
@@ -78,7 +78,7 @@ static void lolipop_crush (NSPoint current_position, NSSize current_geometry,
         br_ease = slow;
         bl_ease = slow;
       }
-    } else if (fabs (dy) < current_geometry.height) {
+    } else if (fabs (dy) < current_geometry.height / 2) {
       if (dx > 0) {
         tl_ease = slow;
         tr_ease = fast;
