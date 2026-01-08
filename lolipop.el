@@ -62,7 +62,7 @@ If nil, only the internal cursor state is updated."
    0 nil
    (lambda ()
      (when-let* ((cursor (window-cursor-info))
-                 (edges (window-inside-pixel-edges)))
+                 (edges (window-body-pixel-edges)))
        (let* ((point (and (pos-visible-in-window-p)
                           (point)))
               (glyph (and point
@@ -75,7 +75,8 @@ If nil, only the internal cursor state is updated."
                 render
                 (+ (aref cursor 1) (nth 0 edges))
                 (+ (aref cursor 2) (nth 1 edges)
-                   (if short (- (aref cursor 5) (aref glyph 8)) 0))
+                   (if short (- (aref cursor 5) (aref glyph 8)) 0)
+                   (- (window-header-line-height)))
                 (aref cursor 3)
                 (if short (aref glyph 3) (aref cursor 4))
                 (color-name-to-rgb (frame-parameter nil 'cursor-color))))))))
