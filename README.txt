@@ -36,9 +36,6 @@ items remain on the project roadmap:
  -  Reduce flickering during high-frequency cursor motion (i.e.,
     middle and long distance movements).
 
- -  Replace the current duration function 0.6 * tanh (distance / 400)
-    with a more robust and better-tuned alternative.
-
  -  Dynamically adjust trail (animation) transparency based on cursor
     animation characteristics.
 
