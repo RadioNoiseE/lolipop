@@ -67,9 +67,6 @@ If nil, only the internal cursor state is updated."
                           (not (eolp))
                           (not (eobp))
                           (point)))
-              (space (and point
-                          (not x-stretch-cursor)
-                          (eq (char-after point) ?\t)))
               (glyph (and point
                           (font-info (font-at point))))
               (short (and glyph
@@ -80,7 +77,7 @@ If nil, only the internal cursor state is updated."
                 (+ (aref cursor 2) (nth 1 edges)
                    (if short (- (aref cursor 5) (aref glyph 8)) 0)
                    (- (window-header-line-height)))
-                (if space (frame-char-width) (aref cursor 3))
+                (aref cursor 3)
                 (if short (aref glyph 3) (aref cursor 4))
                 (color-name-to-rgb (frame-parameter nil 'cursor-color))))))))
 
@@ -92,6 +89,7 @@ If nil, only the internal cursor state is updated."
       (progn
         (unless (functionp 'lolipop-lick)
           (load "lolipop-core"))
+        (setq x-stretch-cursor t)
         (add-hook 'post-command-hook #'lolipop-savor))
     (remove-hook 'post-command-hook #'lolipop-savor)))
 
