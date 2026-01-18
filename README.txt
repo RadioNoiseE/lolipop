@@ -1,3 +1,16 @@
+--- Dealing an issue about incorrect physical cursor geometry recorded
+    in the window object.
+
+Bug status at https://debbugs.gnu.org/cgi/bugreport.cgi?bug=80211.
+
+And I'm deciding to change the way this extension works.  Current
+implementation of cursor animation lags.  One way of solving this is
+to change the animation to time easing based, provided by CA.  Or we
+can change the animation from duration based to event driven, by
+interposing the Emacs cursor drawing functions and inject animation
+logic using dyld_dynamic_interpose (dyld/include/mach-o/dyld_priv.h).
+
+
 +++ To use this package, you must use Emacs 31 built from a revision
     after commit 48b80a, which introduces Fwindow_cursor_info.
 
