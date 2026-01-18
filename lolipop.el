@@ -89,7 +89,6 @@ If nil, only the internal cursor state is updated."
       (progn
         (unless (functionp 'lolipop-lick)
           (load "lolipop-core"))
-        (setq x-stretch-cursor t)
         (add-hook 'post-command-hook #'lolipop-savor))
     (remove-hook 'post-command-hook #'lolipop-savor)))
 
